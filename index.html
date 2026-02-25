@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>認識網路(2)：通訊協定 - 互動測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #fff5f7; /* 極淺粉紅 */
+        }
+        .macaron-pink { background-color: #ffdae9; }
+        .macaron-blue { background-color: #d1eeff; }
+        .macaron-green { background-color: #e2fcd4; }
+        .macaron-yellow { background-color: #fff9c4; }
+        .macaron-purple { background-color: #f1e4ff; }
+        
+        .progress-dot.active { background-color: #ff85a1; border-color: #ff85a1; color: white; }
+        .progress-dot.passed { background-color: #ffdae9; border-color: #ff85a1; color: #ff4d6d; pointer-events: none; }
+        
+        .btn-hover { transition: all 0.2s ease-in-out; }
+        .btn-hover:hover { transform: translateY(-2px); filter: brightness(0.95); }
+        .btn-hover:active { transform: translateY(0); }
+
+        /* 防止拖曳或選取文字 */
+        .no-select { user-select: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+
+    <!-- App Container -->
+    <div id="app" class="max-w-4xl mx-auto w-full flex-grow flex flex-col">
+        
+        <!-- Header: Title & Progress -->
+        <header class="bg-white rounded-3xl shadow-sm p-6 mb-6">
+            <h1 id="main-title" class="text-2xl md:text-3xl font-bold text-pink-500 mb-6 text-center leading-tight">
+                認識網路(2)：通訊協定
+            </h1>
+            
+            <div id="progress-container" class="flex justify-center items-center gap-3 overflow-x-auto py-2">
+                <!-- Progress dots will be injected here -->
+            </div>
+        </header>
+
+        <!-- Main Content Section -->
+        <main id="quiz-content" class="bg-white rounded-[2.5rem] shadow-md p-8 flex-grow flex flex-col relative overflow-hidden">
+            <!-- Question area -->
+            <div id="question-area" class="flex-grow">
+                <div id="question-text" class="text-xl font-medium text-gray-700 mb-2 leading-relaxed">
+                    <!-- Question text injected here -->
+                </div>
+                <div id="question-hint" class="text-sm text-pink-400 mb-8 font-medium">
+                    <!-- Multiple choice hint injected here -->
+                </div>
+                
+                <div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Options injected here -->
+                </div>
+            </div>
+
+            <!-- Footer Controls -->
+            <div class="mt-8 flex justify-between items-center border-t border-gray-100 pt-6">
+                <div class="text-gray-400 text-sm">
+                    試題編號：<span id="question-index-display">1</span> / <span id="total-questions-display">10</span>
+                </div>
+                <div class="flex gap-4">
+                    <button id="prev-btn" class="px-6 py-2 rounded-2xl bg-gray-100 text-gray-500 font-medium btn-hover">上一題</button>
+                    <button id="check-btn" class="px-8 py-2 rounded-2xl bg-pink-400 text-white font-bold shadow-sm btn-hover">檢查答案</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Result Page (Hidden initially) -->
+        <section id="result-page" class="hidden bg-white rounded-[2.5rem] shadow-md p-8 flex-grow flex flex-col items-center text-center">
+            <div class="w-24 h-24 bg-pink-100 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-12 h-12 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">挑戰完成！</h2>
+            <p id="student-id-display" class="text-pink-500 font-mono text-xl mb-6"></p>
+            
+            <div class="grid grid-cols-2 gap-6 mb-8 w-full max-w-md">
+                <div class="bg-pink-50 p-4 rounded-3xl">
+                    <p class="text-xs text-gray-500 mb-1">總花費時間</p>
+                    <p id="total-time" class="text-2xl font-bold text-gray-700">00:00</p>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-3xl">
+                    <p class="text-xs text-gray-500 mb-1">挑戰總次數</p>
+                    <p id="total-attempts" class="text-2xl font-bold text-gray-700">1</p>
+                </div>
+            </div>
+
+            <div id="quote-area" class="bg-gray-50 p-6 rounded-3xl italic text-gray-600 mb-8 max-w-xl">
+                <!-- Quote injected here -->
+            </div>
+
+            <div class="flex flex-col gap-3 w-full max-w-xs">
+                <button onclick="location.reload()" class="w-full py-3 rounded-2xl bg-pink-400 text-white font-bold btn-hover">重新挑戰</button>
+                <p id="sync-status" class="text-xs text-gray-400 mt-2">數據同步中...</p>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/40 hidden z-50 flex items-center justify-center p-4">
+        <div id="modal-box" class="bg-white rounded-3xl max-w-xs w-full p-8 text-center animate-in zoom-in duration-300">
+            <div id="modal-icon" class="mb-4 text-4xl">⚠️</div>
+            <p id="modal-message" class="text-gray-700 font-medium mb-6"></p>
+            <button id="modal-close" class="px-8 py-2 rounded-2xl bg-pink-400 text-white font-bold">我知道了</button>
+        </div>
+    </div>
+
+    <!-- Success Feedback Overlay -->
+    <div id="success-overlay" class="fixed inset-0 pointer-events-none flex items-center justify-center z-40 opacity-0 transition-opacity duration-300">
+        <div class="bg-green-400 text-white px-8 py-4 rounded-full shadow-lg font-bold text-2xl">
+            正確！ 🎉
+        </div>
+    </div>
+
+    <script>
+        // 1. 初始化資料與配置
+        const GAS_URL = "https://script.google.com/macros/s/1DXVmidQ5Ba1qhMsJEXu9I6e2IUyL52jE60UM3OiCTcM/exec";
+        
+        const quizData = [
+            {
+                id: 1,
+                question: "今天介紹的通訊協定是哪一個？",
+                options: ["HTTP", "TCP/IP", "HTML", "URL"],
+                answer: ["TCP/IP"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 2,
+                question: "根據課本的「搬家」類比，下列敘述何者正確？",
+                options: [
+                    "TCP 負責確認門牌地址，IP 負責打包裝箱",
+                    "IP 負責確認門牌地址，TCP 負責打包裝箱與確認",
+                    "只要有 TCP 就能完成搬家，不需要 IP",
+                    "封包編號是由 IP 負責，打包則是 TCP 負責"
+                ],
+                answer: ["IP 負責確認門牌地址，TCP 負責打包裝箱與確認"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 3,
+                question: "在網路上傳送資料的最小單位",
+                options: ["封包", "位元組", "檔案", "訊號"],
+                answer: ["封包"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 4,
+                question: "小明在網路上傳送一個大型檔案，資料被切碎成編號 01 到 05 的「封包」。在傳送過程中，目的地只收到了 01、02、04、05，漏掉了 03。請問根據 TCP 協定，接下來會發生什麼事？",
+                options: [
+                    "目的地直接放棄接收，檔案傳輸失敗",
+                    "目的地會向發送端要求重新傳送 03 號封包",
+                    "目的地會自動用 02 和 04 的資料合成 03 的內容",
+                    "發送端沒收到 03 號的確認訊息，會在一段時間後自動重傳 03 號"
+                ],
+                answer: ["發送端沒收到 03 號的確認訊息，會在一段時間後自動重傳 03 號"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 5,
+                question: "IPv4和IPv6的分隔符號是下列何者？",
+                options: [
+                    "IPv4 使用點（.），IPv6 使用冒號（:）",
+                    "IPv4 使用冒號（:），IPv6 使用點（.）",
+                    "IPv4 使用分號（;），IPv6 使用點（.）",
+                    "IPv4 使用點（.），IPv6 使用分號（;）"
+                ],
+                answer: ["IPv4 使用點（.），IPv6 使用冒號（:）"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 6,
+                question: "IPv4 每一組的數字範圍 (最小到最大)",
+                options: ["0~255", "1~255", "0~256", "0~512"],
+                answer: ["0~255"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 7,
+                question: "下列何者不是合法的 IP (IPv4)？",
+                options: ["192.168.1.1", "140.112.256.1", "163.21.236.8", "127.0.0.1"],
+                answer: ["140.112.256.1"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 8,
+                question: "上課提到解決IPv4不足的方法有哪些？",
+                options: [
+                    "開發出位址長度達 128 位元的 IPv6",
+                    "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網",
+                    "將所有電腦的 IPv4 位址由 32 位元改為 64 位元",
+                    "限制每個人只能擁有一台可以連上網際網路的裝置"
+                ],
+                answer: [
+                    "開發出位址長度達 128 位元的 IPv6",
+                    "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網"
+                ],
+                type: "multiple",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 9,
+                question: "IPv6 的分隔符號是什麼？",
+                options: ["點（.）", "冒號（:）", "分號（;）", "破折號（-）"],
+                answer: ["冒號（:）"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            },
+            {
+                id: 10,
+                question: "IPv6 的數字最小到最大各為多少？",
+                options: ["0~9", "0~255", "0~F", "0~xFFFF"],
+                answer: ["0~F"],
+                type: "single",
+                shuffleOnWrong: true,
+                randomOrder: true
+            }
+        ];
+
+        const quotes = [
+            "網路的價值，不在於硬體，而在於人們分享與交流的方式。",
+            "通訊協定是網路世界的法律，確保所有設備都能彼此交流。",
+            "學習不是填滿桶子，而是點燃火花。",
+            "科技的進步，是為了讓複雜的事情變得簡單。",
+            "TCP/IP 是網路的基石，如同建築的地基。",
+            "每一個微小的封包，都在建構一個龐大的資訊世界。",
+            "不怕出錯，只怕漏掉封包而沒有重傳的勇氣。",
+            "數位時代的成功者，是那些理解底層邏輯的人。",
+            "知識是唯一可以被分享而不減少的資產。",
+            "在網路的世界裡，沒有人是孤島。",
+            "掌握協定，就是掌握數位世界的溝通藝術。",
+            "封包或許會遺失，但學習的累積永遠在那裡。",
+            "科技與人類心靈的結合，才能創造奇蹟。",
+            "網路縮短了距離，但也提醒我們準確溝通的重要性。",
+            "理解網路運作，是現代公民必備的素養。"
+        ];
+
+        // 2. 狀態管理
+        let currentIndex = 0;
+        let passedQuestions = new Set();
+        let currentAttempts = [];
+        let totalChallenges = parseInt(localStorage.getItem('netQuizTotalAttempts') || '1');
+        let startTime = Date.now();
+        let studentId = "";
+        let isChecked = false;
+
+        const colors = ['macaron-pink', 'macaron-blue', 'macaron-green', 'macaron-yellow', 'macaron-purple'];
+
+        // 3. 核心功能函式
+        function generateId() {
+            const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const char = letters[Math.floor(Math.random() * letters.length)];
+            const digit = Math.floor(Math.random() * 10);
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            return `H${char}${digit}-${day}${hour}.${min}`;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showModal(msg, icon = "⚠️") {
+            const overlay = document.getElementById('modal-overlay');
+            document.getElementById('modal-message').innerText = msg;
+            document.getElementById('modal-icon').innerText = icon;
+            overlay.classList.remove('hidden');
+        }
+
+        function renderProgress() {
+            const container = document.getElementById('progress-container');
+            container.innerHTML = '';
+            quizData.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `progress-dot flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold cursor-pointer transition-all`;
+                dot.innerText = idx + 1;
+                
+                if (passedQuestions.has(idx)) {
+                    dot.classList.add('passed');
+                    dot.innerHTML = '✓';
+                } else if (idx === currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.add('bg-white', 'text-gray-300', 'border-gray-200');
+                    dot.onclick = () => {
+                        if (!isChecked && !passedQuestions.has(currentIndex)) {
+                            showModal("切換題目之前，請先點擊「檢查答案」唷！");
+                        } else {
+                            currentIndex = idx;
+                            isChecked = false;
+                            renderQuestion();
+                        }
+                    };
+                }
+                container.appendChild(dot);
+            });
+        }
+
+        function renderQuestion() {
+            const q = quizData[currentIndex];
+            document.getElementById('question-index-display').innerText = currentIndex + 1;
+            document.getElementById('total-questions-display').innerText = quizData.length;
+            document.getElementById('question-text').innerText = q.question;
+            
+            const hint = document.getElementById('question-hint');
+            hint.innerText = q.type === 'multiple' ? "提示：此題為複選題，請選出所有正確選項" : "";
+
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+
+            let options = [...q.options];
+            if (q.randomOrder) options = shuffleArray(options);
+            const displayColors = shuffleArray([...colors]);
+
+            options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = `p-5 rounded-3xl text-left font-medium text-gray-700 shadow-sm border-2 border-transparent transition-all btn-hover ${displayColors[idx % colors.length]}`;
+                btn.innerText = opt;
+                btn.onclick = () => selectOption(btn, q.type);
+                grid.appendChild(btn);
+            });
+
+            renderProgress();
+        }
+
+        function selectOption(btn, type) {
+            if (type === 'single') {
+                document.querySelectorAll('#options-grid button').forEach(b => {
+                    b.classList.remove('border-pink-500', 'ring-4', 'ring-pink-100');
+                    delete b.dataset.selected;
+                });
+                btn.classList.add('border-pink-500', 'ring-4', 'ring-pink-100');
+                btn.dataset.selected = "true";
+            } else {
+                if (btn.dataset.selected === "true") {
+                    btn.classList.remove('border-pink-500', 'ring-4', 'ring-pink-100');
+                    delete btn.dataset.selected;
+                } else {
+                    btn.classList.add('border-pink-500', 'ring-4', 'ring-pink-100');
+                    btn.dataset.selected = "true";
+                }
+            }
+        }
+
+        async function checkAnswer() {
+            const q = quizData[currentIndex];
+            const selectedBtns = Array.from(document.querySelectorAll('#options-grid button[data-selected="true"]'));
+            
+            if (selectedBtns.length === 0) {
+                showModal("請選一個答案再檢查唷！");
+                return;
+            }
+
+            const selectedValues = selectedBtns.map(b => b.innerText).sort();
+            const correctValues = [...q.answer].sort();
+
+            const isCorrect = selectedValues.length === correctValues.length && 
+                              selectedValues.every((v, i) => v === correctValues[i]);
+            
+            currentAttempts[currentIndex]++;
+
+            if (isCorrect) {
+                passedQuestions.add(currentIndex);
+                isChecked = true;
+                
+                const overlay = document.getElementById('success-overlay');
+                overlay.classList.replace('opacity-0', 'opacity-100');
+                
+                setTimeout(() => {
+                    overlay.classList.replace('opacity-100', 'opacity-0');
+                    if (currentIndex < quizData.length - 1) {
+                        currentIndex++;
+                        isChecked = false;
+                        renderQuestion();
+                    } else {
+                        checkFinish();
+                    }
+                }, 600);
+            } else {
+                showModal("哎呀！答案不太正確唷，再試試看！", "❌");
+                if (q.shuffleOnWrong) renderQuestion();
+            }
+        }
+
+        function checkFinish() {
+            if (passedQuestions.size < quizData.length) {
+                showModal("尚有題目未完成，請回頭檢查唷！");
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            const endTime = Date.now();
+            const timeTakenSec = Math.floor((endTime - startTime) / 1000);
+            const mm = String(Math.floor(timeTakenSec / 60)).padStart(2, '0');
+            const ss = String(timeTakenSec % 60).padStart(2, '0');
+
+            document.getElementById('quiz-content').classList.add('hidden');
+            document.getElementById('result-page').classList.remove('hidden');
+            document.getElementById('student-id-display').innerText = studentId;
+            document.getElementById('total-time').innerText = `${mm}:${ss}`;
+            document.getElementById('total-attempts').innerText = totalChallenges;
+            document.getElementById('quote-area').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+            syncToGAS(timeTakenSec);
+            localStorage.setItem('netQuizTotalAttempts', totalChallenges + 1);
+        }
+
+        async function syncToGAS(timeTaken) {
+            const status = document.getElementById('sync-status');
+            const data = {
+                id: studentId,
+                date: new Date().toLocaleString('zh-TW'),
+                challenges: totalChallenges,
+                duration: timeTaken,
+                attemptsDetail: currentAttempts.join(', '),
+                totalScore: passedQuestions.size
+            };
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    status.innerText = "數據已成功儲存至雲端 ✓";
+                    return;
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                }
+            }
+            status.innerText = "連線不穩定，請手動截圖結果。";
+        }
+
+        document.getElementById('modal-close').onclick = () => {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        };
+
+        document.getElementById('check-btn').onclick = checkAnswer;
+        
+        document.getElementById('prev-btn').onclick = () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                isChecked = true;
+                renderQuestion();
+            }
+        };
+
+        window.onload = () => {
+            studentId = generateId();
+            currentAttempts = Array(quizData.length).fill(0);
+            renderProgress();
+            renderQuestion();
+        };
+    </script>
+</body>
+</html>
