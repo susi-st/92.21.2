@@ -51,7 +51,7 @@
                 <div id="question-text" class="text-xl font-medium text-gray-700 mb-2 leading-relaxed">
                     <!-- Question text injected here -->
                 </div>
-                <div id="question-hint" class="text-sm text-pink-400 mb-8 font-medium">
+                <div id="question-hint" class="text-sm text-pink-400 mb-8 font-medium h-6">
                     <!-- Multiple choice hint injected here -->
                 </div>
                 
@@ -120,7 +120,7 @@
 
     <script>
         // 1. 初始化資料與配置
-        const GAS_URL = "https://script.google.com/macros/s/1DXVmidQ5Ba1qhMsJEXu9I6e2IUyL52jE60UM3OiCTcM/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbx0RO7ZnVfRQBiGkeY6ii7f8Yh7mI8A099m-XNTSffC-t4v8LEsOu2jBe0QCdopCdkpFw/exec";
         
         const quizData = [
             {
@@ -203,7 +203,7 @@
             },
             {
                 id: 8,
-                question: "上課提到解決IPv4不足的方法有哪些？",
+                question: "上課提到解決IPv4不足的方法有哪些？（複選題，請選出兩個正確答案）",
                 options: [
                     "開發出位址長度達 128 位元的 IPv6",
                     "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網",
@@ -259,8 +259,8 @@
         // 2. 狀態管理
         let currentIndex = 0;
         let passedQuestions = new Set();
-        let currentAttempts = [];
-        let totalChallenges = parseInt(localStorage.getItem('netQuizTotalAttempts') || '1');
+        let currentAttempts = Array(quizData.length).fill(0);
+        let totalChallenges = parseInt(localStorage.getItem('netQuizTotalAttempts_2') || '1');
         let startTime = Date.now();
         let studentId = "";
         let isChecked = false;
@@ -431,7 +431,7 @@
             document.getElementById('quote-area').innerText = quotes[Math.floor(Math.random() * quotes.length)];
 
             syncToGAS(timeTakenSec);
-            localStorage.setItem('netQuizTotalAttempts', totalChallenges + 1);
+            localStorage.setItem('netQuizTotalAttempts_2', totalChallenges + 1);
         }
 
         async function syncToGAS(timeTaken) {
@@ -445,7 +445,8 @@
                 totalScore: passedQuestions.size
             };
 
-            for (let i = 0; i < 5; i++) {
+            // Exponential Backoff Retry Logic
+            const sendData = async (retryCount = 0) => {
                 try {
                     await fetch(GAS_URL, {
                         method: 'POST',
@@ -454,12 +455,17 @@
                         body: JSON.stringify(data)
                     });
                     status.innerText = "數據已成功儲存至雲端 ✓";
-                    return;
                 } catch (e) {
-                    await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+                    if (retryCount < 5) {
+                        const delay = Math.pow(2, retryCount) * 1000;
+                        setTimeout(() => sendData(retryCount + 1), delay);
+                    } else {
+                        status.innerText = "數據同步失敗，請手動截圖保留結果。";
+                    }
                 }
-            }
-            status.innerText = "連線不穩定，請手動截圖結果。";
+            };
+            
+            sendData();
         }
 
         document.getElementById('modal-close').onclick = () => {
@@ -478,8 +484,6 @@
 
         window.onload = () => {
             studentId = generateId();
-            currentAttempts = Array(quizData.length).fill(0);
-            renderProgress();
             renderQuestion();
         };
     </script>
