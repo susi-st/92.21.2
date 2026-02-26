@@ -66,7 +66,6 @@
                     試題編號：<span id="question-index-display">1</span> / <span id="total-questions-display">10</span>
                 </div>
                 <div class="flex gap-4">
-                    <button id="prev-btn" class="px-6 py-2 rounded-2xl bg-gray-100 text-gray-500 font-medium btn-hover">上一題</button>
                     <button id="check-btn" class="px-8 py-2 rounded-2xl bg-pink-400 text-white font-bold shadow-sm btn-hover">檢查答案</button>
                 </div>
             </div>
@@ -134,14 +133,14 @@
             },
             {
                 id: 2,
-                question: "根據課本的「搬家」類比，下列敘述何者正確？",
+                question: "如果把TCP/IP的工作以「搬家」類比，下列敘述何者正確？",
                 options: [
-                    "TCP 負責確認門牌地址，IP 負責打包裝箱",
-                    "IP 負責確認門牌地址，TCP 負責打包裝箱與確認",
+                    "TCP 負責打包、裝箱與編號，IP 負責貼上門牌地址",
+                    "打包與裝箱由TCP 負責，編號及貼門牌地址則是由 IP 負責",
                     "只要有 TCP 就能完成搬家，不需要 IP",
-                    "封包編號是由 IP 負責，打包則是 TCP 負責"
+                    "TCP 負責確認門牌地址，IP 負責打包裝箱與編號"
                 ],
-                answer: ["IP 負責確認門牌地址，TCP 負責打包裝箱與確認"],
+                answer: ["TCP 負責打包、裝箱與編號，IP 負責貼上門牌地址"],
                 type: "single",
                 shuffleOnWrong: true,
                 randomOrder: true
@@ -157,14 +156,14 @@
             },
             {
                 id: 4,
-                question: "小明在網路上傳送一個大型檔案，資料被切碎成編號 01 到 05 的「封包」。在傳送過程中，目的地只收到了 01、02、04、05，漏掉了 03。請問根據 TCP 協定，接下來會發生什麼事？",
+                question: "當來源端發送了5個封包，而目的端只收到編號1、2、4、5，漏掉了 3號封包。根據 TCP 的工作原理，接下來會發生什麼事？",
                 options: [
-                    "目的地直接放棄接收，檔案傳輸失敗",
-                    "目的地會向發送端要求重新傳送 03 號封包",
-                    "目的地會自動用 02 和 04 的資料合成 03 的內容",
-                    "發送端沒收到 03 號的確認訊息，會在一段時間後自動重傳 03 號"
+                    "目的端的電腦會自動利用編號2 and 4的封包去合成3 號封包的內容",
+                    "發送端在一段時間後若沒收到3號封包的確認訊息，會自動重傳3號封包",
+                    "目的端在一段時間後仍未收到3號封包，會自動向發送端要求重新傳送3號封包",
+                    "目的端發現封包不完整，會回報發送端傳輸失敗，發送端會立即重新發送"
                 ],
-                answer: ["發送端沒收到 03 號的確認訊息，會在一段時間後自動重傳 03 號"],
+                answer: ["發送端在一段時間後若沒收到3號封包的確認訊息，會自動重傳3號封包"],
                 type: "single",
                 shuffleOnWrong: true,
                 randomOrder: true
@@ -194,25 +193,25 @@
             },
             {
                 id: 7,
-                question: "下列何者不是合法的 IP (IPv4)？",
-                options: ["192.168.1.1", "140.112.256.1", "163.21.236.8", "127.0.0.1"],
-                answer: ["140.112.256.1"],
-                type: "single",
+                question: "根據IPv4的規定，下列何者不是合法的 IP？",
+                options: ["192.168.1.1", "140.112.256.1", "163.21.236.8", "127.0.0.0.1"],
+                answer: ["140.112.256.1", "127.0.0.0.1"],
+                type: "multiple",
                 shuffleOnWrong: true,
                 randomOrder: true
             },
             {
                 id: 8,
-                question: "上課提到解決IPv4不足的方法有哪些？（複選題，請選出兩個正確答案）",
+                question: "目前解決IP(v4)數量不足的方法有哪兩個？",
                 options: [
-                    "開發出位址長度達 128 位元的 IPv6",
                     "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網",
-                    "將所有電腦的 IPv4 位址由 32 位元改為 64 位元",
-                    "限制每個人只能擁有一台可以連上網際網路的裝置"
+                    "增加IP的數量，開發出位址長度達 128 位元的 IPv6",
+                    "限制每個用戶只能使用固定數量的公有IP，私有IP的數量則不受限制",
+                    "將所有電腦的 IPv4 位址由 32 位元改為 64 位元的新版IP"
                 ],
                 answer: [
-                    "開發出位址長度達 128 位元的 IPv6",
-                    "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網"
+                    "利用路由器搭配私有 IP，讓多台電腦共用一個公有 IP 上網",
+                    "增加IP的數量，開發出位址長度達 128 位元的 IPv6"
                 ],
                 type: "multiple",
                 shuffleOnWrong: true,
@@ -308,16 +307,7 @@
                 } else if (idx === currentIndex) {
                     dot.classList.add('active');
                 } else {
-                    dot.classList.add('bg-white', 'text-gray-300', 'border-gray-200');
-                    dot.onclick = () => {
-                        if (!isChecked && !passedQuestions.has(currentIndex)) {
-                            showModal("切換題目之前，請先點擊「檢查答案」唷！");
-                        } else {
-                            currentIndex = idx;
-                            isChecked = false;
-                            renderQuestion();
-                        }
-                    };
+                    dot.classList.add('bg-white', 'text-gray-300', 'border-gray-200', 'pointer-events-none');
                 }
                 container.appendChild(dot);
             });
@@ -445,7 +435,6 @@
                 totalScore: passedQuestions.size
             };
 
-            // Exponential Backoff Retry Logic
             const sendData = async (retryCount = 0) => {
                 try {
                     await fetch(GAS_URL, {
@@ -473,14 +462,6 @@
         };
 
         document.getElementById('check-btn').onclick = checkAnswer;
-        
-        document.getElementById('prev-btn').onclick = () => {
-            if (currentIndex > 0) {
-                currentIndex--;
-                isChecked = true;
-                renderQuestion();
-            }
-        };
 
         window.onload = () => {
             studentId = generateId();
